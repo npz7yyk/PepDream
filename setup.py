@@ -51,7 +51,7 @@ def main():
         install_requires=[
             "tqdm",
             "numpy",
-            "sklearn",
+            "scikit-learn",
             "torch",
             "Cython"
         ],

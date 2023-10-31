@@ -1,18 +1,19 @@
 Metadata-Version: 2.1
 Name: PepDream
 Version: 0.1.0
-Summary: TO BE DONE
+Summary: PepDream: automatic feature extraction for peptide identification from tandem mass spectra
 Home-page: https://github.com/npz7yyk/PepDream
 Author: Yikang Yue, University of Science and Technology of China (USTC)
 Author-email: yyk2020@mail.ustc.edu.cn
-License: OSL-3.0
+License: MIT
 Platform: any
 Classifier: Natural Language :: English
 Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Science/Research
-Classifier: License :: OSI Approved :: Open Software License 3.0 (OSL-3.0)
+Classifier: License :: OSI Approved :: MIT License
 Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
 Classifier: Operating System :: MacOS
 Classifier: Operating System :: Microsoft :: Windows
 Classifier: Operating System :: Unix
 Classifier: Programming Language :: Python :: 3 :: Only
+License-File: LICENSE
