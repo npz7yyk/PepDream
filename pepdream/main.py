@@ -8,6 +8,39 @@
 import argparse
 
 
+DEFAULT_VALUES = {
+    "json_file": "",
+    "json_example": False,
+    "gpu_id": -1,
+    "working_dir": "",
+    "spectrum_model_type": "prosit",
+    "starting_step": "parse-maxquant-output",
+    "ending_step": "finetune-spectrum-model",
+    "spectrum_model_weight": "",
+    "msms_file": "",
+    "csv_dir": "",
+    "pin_file": "",
+    "seed": None,
+    "k_fold": 3,
+    "total_iteration": 8,
+    "output_interval": 1,
+    "main_q_threshold": 0.01,
+    "deep_q_threshold": 0.07,
+    "eval_q_threshold": 0.1,
+    "batch_size": 5000,
+    "learning_rate": 0.001,
+    "dropout_rate": 0.4,
+    "adam_weight_decay": 2e-05,
+    "total_snapshot": 10,
+    "snapshot_in_ensemble": 16,
+    "epoch_per_snapshot": 6,
+    "positive_smoothing": 0.99,
+    "negative_smoothing": 0.99,
+    "false_positive_loss_factor": 4.0,
+    "gamma": 0.5
+}
+
+
 def parse_args():
     # Parse arguments
     description = """
@@ -33,11 +66,11 @@ def parse_args():
         description="Arguments for general usage."
     )
     group.add_argument(
-        "-j", "--json-file", type=str, default="", action="store",
+        "-j", "--json-file", type=str, default=None, action="store",
         help=(
             "Path to a json file containing all arguments. "
-            "Arguments in json file have higher priority than "
-            "arguments specified in command line. "
+            "Arguments specified in command line will overwrite "
+            "arguments specified in json file."
         )
     )
     group.add_argument(
@@ -49,7 +82,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-g", "--gpu-id", type=int, default=-1, action="store",
+        "-g", "--gpu-id", type=int, default=None, action="store",
         help=(
             "Specify the GPU to use. Use -1 or omit for no GPU usage. "
             "Note: Using no GPU will significantly slow down the program. "
@@ -57,7 +90,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-o", "--working-dir", type=str, default="", action="store",
+        "-o", "--working-dir", type=str, default=None, action="store",
         help=(
             "Set the working directory for this script. "
             "Create this directory if it doesn't exist. "
@@ -66,7 +99,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-t", "--spectrum-model-type", type=str, default="prosit",
+        "-t", "--spectrum-model-type", type=str, default=None,
         choices=["prosit", "pdeep2"], action="store",
         help=(
             "Type of spectrum prediction model. "
@@ -122,7 +155,7 @@ def parse_args():
             "rescore-psm", "rescore", "r", "3",
             "finetune-spectrum-model", "finetune", "f", "4"
         ],
-        default="parse-maxquant-output", action="store",
+        default=None, action="store",
         help=(
             "Specify the starting step of the workflow. "
             "Please check out the description of critical "
@@ -138,7 +171,7 @@ def parse_args():
             "rescore-psm", "rescore", "r", "3",
             "finetune-spectrum-model", "finetune", "f", "4"
         ],
-        default="finetune-spectrum-model", action="store",
+        default=None, action="store",
         help=(
             "Specify the starting step of the workflow. "
             "Please check out the description of critical "
@@ -154,7 +187,7 @@ def parse_args():
         description="Arguments for specifying input files."
     )
     group.add_argument(
-        "-w", "--spectrum-model-weight", type=str, default="", action="store",
+        "-w", "--spectrum-model-weight", type=str, default=None, action="store",
         help=(
             "Path to the spectrum prediction model weight. "
             "Please check out https://github.com/npz7yyk/PepDream "
@@ -162,21 +195,21 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-m", "--msms-file", type=str, default="", action="store",
+        "-m", "--msms-file", type=str, default=None, action="store",
         help=(
             "MaxQuant msms.txt file containing PSMs information. "
             "Required if starting from processing MaxQuant output."
         )
     )
     group.add_argument(
-        "-c", "--csv-dir", type=str, default="", action="store",
+        "-c", "--csv-dir", type=str, default=None, action="store",
         help=(
             "Directory containing MaxQuant *.csv files. "
             "Required if starting from processing MaxQuant output."
         )
     )
     group.add_argument(
-        "-p", "--pin-file", type=str, default="", action="store",
+        "-p", "--pin-file", type=str, default=None, action="store",
         help=(
             "Path to a custom percolator input file (pin file). "
             "Use this option if you want to provide your own pin file. "
@@ -198,7 +231,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-k", "--k-fold", type=int, default=3, action="store",
+        "-k", "--k-fold", type=int, default=None, action="store",
         help=(
             "K-fold defines the number of folds employed in cross-validation, "
             "with a minimum requirement of 2. During each iteration, models are "
@@ -211,7 +244,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-i", "--total-iteration", type=int, default=8, action="store",
+        "-i", "--total-iteration", type=int, default=None, action="store",
         help=(
             "The total number of global training iterations. "
             "In each iteration, since each model is trained on its own folds, "
@@ -223,7 +256,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-oi", "--output-interval", type=int, default=1, action="store",
+        "-oi", "--output-interval", type=int, default=None, action="store",
         help=(
             "Interval of iterations between two consecutive output. "
             "Typically, script performance increases with the number of "
@@ -234,7 +267,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-q", "--main-q-threshold", type=float, default=0.01, action="store",
+        "-q", "--main-q-threshold", type=float, default=None, action="store",
         help=(
             "The script will provide counts of PSMs with q-values below this "
             "specified threshold upon execution, allowing users to monitoring "
@@ -244,7 +277,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-dq", "--deep-q-threshold", type=float, default=0.07, action="store",
+        "-dq", "--deep-q-threshold", type=float, default=None, action="store",
         help=(
             "During rescoring, PSMs with q-values below this threshold are "
             "included as model training data. It's crucial that this threshold "
@@ -256,7 +289,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-eq", "--eval-q-threshold", type=float, default=0.10, action="store",
+        "-eq", "--eval-q-threshold", type=float, default=None, action="store",
         help=(
             "During model selection phase, AUC is used to evaluate individual "
             "models. PSMs with q-values below this threshold contribute to "
@@ -269,26 +302,26 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-b", "--batch-size", type=int, default=5000, action="store",
+        "-b", "--batch-size", type=int, default=None, action="store",
         help="Batch size used in training. Default: 5000."
     )
     group.add_argument(
-        "-lr", "--learning-rate", type=float, default=0.001, action="store",
+        "-lr", "--learning-rate", type=float, default=None, action="store",
         help="Initial learning rate used in training. Default: 0.001."
     )
     group.add_argument(
-        "-dr", "--dropout-rate", type=float, default=0.4, action="store",
+        "-dr", "--dropout-rate", type=float, default=None, action="store",
         help=(
             "Dropout rate used in the fine-tuning process. "
             "Default: 0.4."
         )
     )
     group.add_argument(
-        "-wd", "--adam-weight-decay", type=float, default=2e-5, action="store",
+        "-wd", "--adam-weight-decay", type=float, default=None, action="store",
         help="Adam weight decay factor used for regularization. Default: 2e-5."
     )
     group.add_argument(
-        "-ss", "--total-snapshot", type=int, default=10, action="store",
+        "-ss", "--total-snapshot", type=int, default=None, action="store",
         help=(
             "Number of model snapshots taken when trained on each (k-1) folds. "
             "During training, model snapshots are taken at regular intervals. "
@@ -298,7 +331,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-se", "--snapshot-in-ensemble", type=int, default=16, action="store",
+        "-se", "--snapshot-in-ensemble", type=int, default=None, action="store",
         help=(
             "Number of snapshots (may duplicate) in model ensemble. "
             "When forming an ensemble, the final output is determined by "
@@ -309,7 +342,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-es", "--epoch-per-snapshot", type=int, default=6, action="store",
+        "-es", "--epoch-per-snapshot", type=int, default=None, action="store",
         help=(
             "Number of epochs between two consecutive model snapshots. "
             "Note: (total-snapshot * epoch-per-snapshot) determines "
@@ -318,7 +351,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-ps", "--positive-smoothing", type=float, default=0.99, action="store",
+        "-ps", "--positive-smoothing", type=float, default=None, action="store",
         help=(
             "Smoothing factor used for positive class - PSMs with label 1. "
             "Stands for 'the probability of a PSM being mislabeled as "
@@ -327,7 +360,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-ns", "--negative-smoothing", type=float, default=0.99, action="store",
+        "-ns", "--negative-smoothing", type=float, default=None, action="store",
         help=(
             "Smoothing factor used for negative class - PSMs with label -1. "
             "Stands for 'the probability of a PSM being mislabeled as "
@@ -337,7 +370,7 @@ def parse_args():
     )
     group.add_argument(
         "-fp", "--false-positive-loss-factor",
-        type=float, default=4.0, action="store",
+        type=float, default=None, action="store",
         help=(
             "Factor used to reweight the loss of false positive PSMs. "
             "A false positive PSM: a PSM with label -1 but predicted as 1. "
@@ -347,7 +380,7 @@ def parse_args():
         )
     )
     group.add_argument(
-        "-gm", "--gamma", type=float, default=0.5, action="store",
+        "-gm", "--gamma", type=float, default=None, action="store",
         help=(
             "The loss factor of spectral angle loss used in fine-tuning. "
             "When fine-tuning, the loss function can be interpreted as: "
@@ -366,7 +399,7 @@ def parse_args():
     if args.json_example:
         args.json_example = False
         with open("arguments.json", "w") as file:
-            json.dump(vars(args), file, indent=4)
+            json.dump(DEFAULT_VALUES, file, indent=4)
         path = os.path.abspath("arguments.json")
         print(f"Default arguments are saved in {path}.")
         exit(0)
@@ -380,8 +413,14 @@ def parse_args():
         with open(args.json_file) as file:
             json_args = json.load(file)
         for key, value in json_args.items():
-            if key in vars(args):
+            # if key is not specified in command line, use value in json file
+            if key in vars(args) and vars(args)[key] is None:
                 setattr(args, key, value)
+
+    # override remaining not specified arguments with default values
+    for key, value in DEFAULT_VALUES.items():
+        if vars(args)[key] is None:
+            setattr(args, key, value)
 
     # critical workflow arguments
     def step_name_to_number(step: str):
