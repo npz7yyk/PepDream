@@ -517,13 +517,16 @@ def parse_args():
         )
     # end of checking arguments for parsing MaxQuant output
 
-    # checking if spectrum model type is supported
+    # check if spectrum model type is supported
     if ending_step >= 2:
         args.spectrum_model_type = args.spectrum_model_type.lower()
         assert args.spectrum_model_type in ["prosit", "pdeep2"], (
             "Specified spectrum model type is not supported."
             "Please choose from 'prosit' and 'pdeep2'."
         )
+
+    # check if spectrum model weight is available
+    if args.predict_spectrum or args.finetune_spectrum_model:
         assert args.spectrum_model_weight, (
             "Please specify spectrum model weight, which is used "
             "in predicting spectrum and finetuning spectrum model."
