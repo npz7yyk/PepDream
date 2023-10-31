@@ -49,6 +49,7 @@ def main():
         url=URL,
         platforms=["any"],
         install_requires=[
+            "h5py",
             "tqdm",
             "numpy",
             "scikit-learn",
