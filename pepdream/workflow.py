@@ -175,9 +175,6 @@ class Workflow:
         if self.params.ending_step == 3:
             return
 
-        # force reproducibility
-        set_seed(self.params.seed)
-
         # Finetune spectrum prediction model
         if self.params.finetune_spectrum_model:
             self.finetune_spectrum_model()
