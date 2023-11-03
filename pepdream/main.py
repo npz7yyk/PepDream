@@ -227,7 +227,9 @@ def parse_args():
         "-sd", "--seed", type=int, default=None, action="store",
         help=(
             "Random seed used in training for reproducibility. "
-            "If not specified, seed will not be fixed."
+            "If not specified, seed will not be fixed. "
+            "Developer hint: seed 3407 really works well. "
+            "(https://doi.org/10.48550/arXiv.2109.08203)"
         )
     )
     group.add_argument(
