@@ -298,9 +298,7 @@ def match_ions(
         psm (dict): dict of psm data
     """
     print(f"Reading msms data from {msms_file} ...")
-    warnings.filterwarnings("ignore", category=UserWarning)
     df = pd.read_csv(msms_file, sep="\t")
-    warnings.resetwarnings()
 
     # filter rows using the following columns
     filter_need = ["Fragmentation", "Charge", "Length", "Score",
