@@ -10,6 +10,7 @@ import re
 import h5py
 import numpy as np
 import pandas as pd
+import warnings
 from tqdm import tqdm
 from typing import List, Dict
 
@@ -297,7 +298,9 @@ def match_ions(
         psm (dict): dict of psm data
     """
     print(f"Reading msms data from {msms_file} ...")
+    warnings.filterwarnings("ignore", category=UserWarning)
     df = pd.read_csv(msms_file, sep="\t")
+    warnings.resetwarnings()
 
     # filter rows using the following columns
     filter_need = ["Fragmentation", "Charge", "Length", "Score",
@@ -305,7 +308,7 @@ def match_ions(
     filter_need = df[filter_need]
     print("Filtering msms data ...")
     msms_df = df[filter_need.apply(psm_filter, axis=1)]
-    msms_df = msms_df.sort_values(by="id")
+    msms_df = msms_df.sort_values(by="id").reset_index(drop=True)
     print(f"Msms data loaded, {len(msms_df)} PSMs selected.")
 
     # get the raw data
@@ -322,11 +325,17 @@ def match_ions(
 
     print(f"Matching ions, {len(msms_df)} PSMs to match ...")
 
-    for _, msms in tqdm(msms_df.iterrows()):
+    selected_rows = []
+    for index, msms in tqdm(msms_df.iterrows()):
         # get the corresponding raw data
         raw = raw_dfs[msms["Raw file"]]
         raw = raw.loc[raw["scan_number"] == msms["Scan number"]]
-        raw = raw.to_dict(orient="records")[0]
+        if len(raw):
+            # suppose scan_number is an unique key
+            raw = raw.to_dict(orient="records")[0]
+        else:
+            # no corresponding scan number in csv file
+            continue
 
         # prepare data for matching
         sequence = msms["Modified sequence"].strip("_")
@@ -341,12 +350,16 @@ def match_ions(
         )
         amino_acid = peptide_encoder(amino_acid)
 
+        selected_rows.append(index)
         psm["sequences"].append(amino_acid)
         psm["lengths"].append(msms["Length"])
         psm["charges"].append(msms["Charge"])
         psm["observe_intensities"].append(intensity)
     # end of for loop
-    print(f"Matching ions done, {len(psm['sequences'])} PSMs matched.")
+    print(f"Matching ions done, {len(selected_rows)} PSMs matched.")
+
+    # select the corresponding rows
+    msms_df = msms_df.iloc[selected_rows]
 
     # concatenate the result
     psm["sequences"] = np.vstack(psm["sequences"])
