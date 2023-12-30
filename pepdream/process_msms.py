@@ -10,7 +10,6 @@ import re
 import h5py
 import numpy as np
 import pandas as pd
-import warnings
 from tqdm import tqdm
 from typing import List, Dict
 
@@ -228,6 +227,13 @@ def match_single_psm(
     return intensities
 
 
+ANDROMEDA_MSMS_COLUMNS = [
+    "id", "Scan number", "Reverse", "Mass", "Sequence",
+    "Charge", "Missed cleavages", "Length", "Mass Error [ppm]",
+    "Score", "Delta score"
+]
+
+
 ANDROMEDA_FEATURES = [
     "SpecId", "Label", "ScanNr", "ExpMass", "Mass",
     "deltaM_ppm", "deltaM_da", "absDeltaM_ppm", "absDeltaM_da",
@@ -245,10 +251,37 @@ def andromeda_feature(msms: pd.DataFrame, *args):
     Returns:
         features (torch.Tensor): a tensor containing andromeda features
     """
+
+    # address the problem of column names
+    msms_keys = msms.keys()
+    for column in ANDROMEDA_MSMS_COLUMNS:
+        # column name is correct, do nothing
+        if column in msms_keys:
+            continue
+
+        # column name is not correct, try to find the correct one
+        column_lower = column.lower()
+        find = False
+        for key in msms_keys:
+            if column_lower == key.lower():
+                msms[column] = msms[key]
+                find = True
+                break
+
+        # column name is not correct, and cannot find the correct one
+        if not find:
+            # try to fill the column with 0
+            msms[column] = [0 for _ in range(len(msms))]
+
+    # some columns may have nan values, try to fill them with 0
+    for column in ANDROMEDA_MSMS_COLUMNS:
+        if msms[column].isnull().any():
+            msms[column] = msms[column].fillna(0)
+
     features = {}
     features["SpecId"] = msms["id"]
     features["ScanNr"] = msms["Scan number"]
-    features["Label"] = msms["Reverse"].isnull() * 2 - 1
+    features["Label"] = (msms["Reverse"] != "+") * 2 - 1
     features["ExpMass"] = 1000
     features["Mass"] = msms["Mass"]
     features["Peptide"] = ["_." + m + "._" for m in msms["Sequence"]]
@@ -300,9 +333,16 @@ def match_ions(
     print(f"Reading msms data from {msms_file} ...")
     df = pd.read_csv(msms_file, sep="\t")
 
+    # assign id to each row if not provided
+    if "id" not in df.keys():
+        df["id"] = [i for i in range(1, len(df) + 1)]
+
+    # pass fragmentation check if not provided
+    if "Fragmentation" not in df.keys():
+        df["Fragmentation"] = ["HCD" for _ in range(len(df))]
+
     # filter rows using the following columns
-    filter_need = ["Fragmentation", "Charge", "Length", "Score",
-                   "Modified sequence", "All modified sequences"]
+    filter_need = ["Fragmentation", "Charge", "Length", "Score", "Modified sequence"]
     filter_need = df[filter_need]
     print("Filtering msms data ...")
     msms_df = df[filter_need.apply(psm_filter, axis=1)]
