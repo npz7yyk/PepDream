@@ -52,11 +52,12 @@ class Workflow:
 
         # Load pin file
         pin_inform = load_feature_matrix(self.params.pin_file)
-        pep_inform, feature_names, features, labels = pin_inform
+        pep_inform, feature_names, features, labels, scan_numbers = pin_inform
         self.pep_inform = pep_inform
         self.feature_names = feature_names
         self.features = features
         self.labels = labels
+        self.scan_numbers = scan_numbers
         self.size, self.dim = features.shape
 
         # Set number of features
@@ -93,7 +94,7 @@ class Workflow:
             pre(self.observe_intensities), pre(self.predict_intensities)
         ]
 
-        split_data(len(self.labels))
+        split_data(self.scan_numbers)
         scores, weights = run_algorithm(
             features=features,
             labels=self.labels,

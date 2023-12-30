@@ -89,7 +89,10 @@ def load_feature_matrix(filename):
     features = preprocessing.scale(features)
     warnings.resetwarnings()
 
-    return pep_inform, feature_names, features, labels
+    # Extract scan number
+    scan_number = df["ScanNr"].to_numpy(dtype=np.int32)
+
+    return pep_inform, feature_names, features, labels, scan_number
 
 
 def search_init_dir(X: np.ndarray, Y: np.ndarray, q=0.01):

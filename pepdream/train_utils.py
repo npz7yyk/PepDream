@@ -13,6 +13,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 from os.path import join
+from collections import defaultdict
 from torch.backends import cudnn
 from argparse import Namespace
 from typing import Callable, Optional, Union, Iterable, Tuple, List, Dict
@@ -97,12 +98,21 @@ train_keys = None
 test_keys = None
 
 
-def split_data(size: int):
+def split_data(scan_numbers: List[int]):
     """Split data into k folds."""
     global train_keys, test_keys
-    indices = np.arange(size)
-    np.random.shuffle(indices)
-    test_keys = np.array_split(indices, k)
+    test_keys = [list() for _ in range(k)]
+
+    unique_scan_number = list(set(scan_numbers))
+    random.shuffle(unique_scan_number)
+
+    num2index = defaultdict(list)
+    for i, num in enumerate(scan_numbers):
+        num2index[num].append(i)
+
+    for scan_number in unique_scan_number:
+        min(test_keys, key=len).extend(num2index[scan_number])
+
     train_keys = []
     for i in range(k):
         train_keys.append(
