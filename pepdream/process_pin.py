@@ -129,7 +129,7 @@ def search_init_dir(X: np.ndarray, Y: np.ndarray, q=0.01):
             max_feat = i
             max_scores = -scores
 
-    print(f"Found initial feature No.{max_feat} with {max_num} identifications.")
+    print(f"Found initial feature No.{max_feat} with {max_num} identifications <= q = {q}")
     return max_feat, max_scores
 
 

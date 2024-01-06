@@ -83,8 +83,8 @@ class Workflow:
         params = self.params
 
         # Score initialization
-        q = params.q
-        init_dir, init_scores = search_init_dir(self.features, self.labels, q)
+        deepq = params.deepq
+        init_dir, init_scores = search_init_dir(self.features, self.labels, deepq)
         init_feature = self.feature_names[init_dir]
         print(f"Using feature No.{init_dir}: {init_feature} as initial direction.")
 
