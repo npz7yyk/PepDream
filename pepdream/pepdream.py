@@ -259,7 +259,7 @@ class SpectrumNormalizer(nn.Module):
         return spectrum
 
 
-class FuseOptimizer:
+class FusedOptimizer:
     def __init__(self, optimizers: List[torch.optim.Optimizer]):
         self.optimizers = optimizers
 
@@ -337,7 +337,7 @@ class ConcatedModel(nn.Module):
             learning_rate,
             weight_decay
         )
-        return FuseOptimizer([spectrum_optimizer, feature_optimizer])
+        return FusedOptimizer([spectrum_optimizer, feature_optimizer])
 
     def build_loss(self, class_weights: List[float]):
         return FinetuneLoss(class_weights)
