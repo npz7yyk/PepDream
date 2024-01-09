@@ -1,8 +1,9 @@
 import sys
 
-if (sys.version_info[0] == 3 and sys.version_info[1] < 0):
-    print("PepDream requires Python version 3.0 or later")
-    sys.exit(1)
+# limit python version to 3.10 or later
+if sys.version_info < (3, 10):
+    print("PepDream requires Python 3.10 or later, please upgrade your Python version")
+    exit(1)
 
 # Check if Cython is available or if it needs to be installed
 try:
